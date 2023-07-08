@@ -1,0 +1,14 @@
+FROM python:3.11-slim-buster
+LABEL maintainer="ronmarti18@gmail.com"
+
+RUN apt update && apt install -y build-essential gettext python3-dev
+RUN pip install -U poetry pip setuptools
+
+ENV PYTHONUNBUFFERED=1
+
+RUN mkdir /src
+WORKDIR /src
+COPY . /src/
+
+RUN poetry config virtualenvs.create false
+RUN poetry install

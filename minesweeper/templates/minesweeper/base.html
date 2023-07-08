@@ -1,0 +1,36 @@
+{% load static %}
+{% load django_htmx %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>minesweeper</title>
+    <style>
+        .grid {
+            width: 30px;
+            height: 30px;
+            margin: 1px;
+            vertical-align: bottom;
+        }
+    </style>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+
+
+{% block content %}
+
+{% endblock %}
+
+<script src="{% static 'minesweeper/js/htmx.min.js' %}" defer></script>
+{% django_htmx_script %}
+<script>
+    document.addEventListener('contextmenu', (event) => {
+        console.log(event.target);
+        event.preventDefault();
+    });
+    document.body.addEventListener('htmx:configRequest', (event) => {
+        event.detail.headers['Hx-Trigger'] = event.detail.triggeringEvent.type;
+    });
+</script>
+</body>
+</html>

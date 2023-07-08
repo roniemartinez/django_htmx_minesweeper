@@ -1,0 +1,19 @@
+{% extends "minesweeper/base.html" %}
+
+{% block content %}
+    {% for i in "0123456789"|make_list %}
+        <div style="display: flex;">
+            {% for j in "0123456789"|make_list %}
+                <button
+                    hx-post="{% url 'minesweeper:clicked' x=i y=j %}"
+                    hx-trigger="click,contextmenu"
+                    hx-target="this"
+                    hx-swap="outerHTML"
+                    class="grid"
+                >
+                    &nbsp;
+                </button>
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% endblock %}

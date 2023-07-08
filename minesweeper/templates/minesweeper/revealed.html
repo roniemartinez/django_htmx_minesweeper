@@ -1,0 +1,8 @@
+{% load static %}
+{% with 'minesweeper/img/'|add:image as svg %}
+    <img
+            src="{% static svg %}"
+            alt="Revealed"
+            class="grid"
+    >
+{% endwith %}
