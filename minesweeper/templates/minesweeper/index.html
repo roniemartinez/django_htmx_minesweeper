@@ -1,5 +1,7 @@
 {% extends "minesweeper/base.html" %}
 
+{% load static %}
+
 {% block content %}
     {% for i in "0123456789"|make_list %}
         <div style="display: flex;">
@@ -11,7 +13,7 @@
                     hx-swap="outerHTML"
                     class="grid"
                 >
-                    &nbsp;
+                    <img src="{% static 'minesweeper/img/blank.svg' %}" alt="Blank">
                 </button>
             {% endfor %}
         </div>

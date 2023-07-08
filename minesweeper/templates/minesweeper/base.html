@@ -16,7 +16,6 @@
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
-
 {% block content %}
 
 {% endblock %}
@@ -24,10 +23,12 @@
 <script src="{% static 'minesweeper/js/htmx.min.js' %}" defer></script>
 {% django_htmx_script %}
 <script>
+    // prevent showing context menu on right-click
     document.addEventListener('contextmenu', (event) => {
-        console.log(event.target);
         event.preventDefault();
     });
+
+    // include trigger type in headers
     document.body.addEventListener('htmx:configRequest', (event) => {
         event.detail.headers['Hx-Trigger'] = event.detail.triggeringEvent.type;
     });
