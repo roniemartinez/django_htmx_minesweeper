@@ -4,6 +4,8 @@
 
 Minesweeper implementation using Django and HTMX
 
+![Screenshot](./screenshots/screenshot.png)
+
 ## Mouse Actions
 
 - Click: Reveal

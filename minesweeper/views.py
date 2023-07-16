@@ -1,4 +1,5 @@
 import random
+from dataclasses import dataclass
 from typing import Any
 
 from django.core.cache import cache
@@ -8,19 +9,57 @@ from django.views import View
 from django.views.generic import TemplateView
 
 
+@dataclass
+class Item:
+    is_mine: bool
+    count: int = 0
+    is_revealed: bool = False
+
+
 class HomeView(TemplateView):
     template_name = "minesweeper/index.html"
 
     def get(self, request, *args, **kwargs):
-        test = cache.get("test")
-        if test is None:
-            cache.set("test", "hello")  # TODO: generate new board
+        board = cache.get("board")
+        if board is None:
+            # Generate board
+            max_width = 10
+            coordinates = [(x, y) for x in range(max_width) for y in range(max_width)]
+            mines = random.sample(coordinates, k=max_width)
+            board = [[Item(is_mine=(x, y) in mines) for x in range(max_width)] for y in range(max_width)]
+            for y in range(max_width):
+                for x in range(max_width):
+                    if board[x][y].is_mine is True:
+                        continue
+
+                    count = 0
+
+                    for neighbor_x, neighbor_y in [
+                        (x - 1, y - 1),
+                        (x - 1, y),
+                        (x - 1, y + 1),
+                        (x, y - 1),
+                        (x, y + 1),
+                        (x + 1, y - 1),
+                        (x + 1, y),
+                        (x + 1, y + 1),
+                    ]:
+                        if neighbor_x < 0 or neighbor_y < 0:
+                            continue
+                        try:
+                            count += board[neighbor_x][neighbor_y].is_mine is True
+                        except IndexError:
+                            pass
+
+                    board[x][y].count = count
+            cache.set("board", board)
         return super().get(request, *args, **kwargs)
 
 
 class ClickedView(View):
     def post(self, request: HttpRequest, **kwargs: Any) -> HttpResponse:
-        print(cache.get("test"))  # TODO: retrieve board and update grid (revealed, marked)
+        item: Item = cache.get("board")[kwargs["x"]][kwargs["y"]]
+
         trigger = request.headers.get("Hx-Trigger", "click")
         if trigger == "contextmenu":
             return render(
@@ -31,23 +70,14 @@ class ClickedView(View):
                     "y": kwargs["y"],
                 },
             )
+
+        image = "blank.svg"
+        if item.is_mine:
+            image = "mine.svg"
+        if item.count > 0:
+            image = f"numeric-{item.count}.svg"
         return render(
             request=request,
             template_name="minesweeper/revealed.html",
-            context={
-                "image": random.choice(
-                    (
-                        "mine.svg",
-                        "blank.svg",
-                        "numeric-1.svg",
-                        "numeric-2.svg",
-                        "numeric-3.svg",
-                        "numeric-4.svg",
-                        "numeric-5.svg",
-                        "numeric-6.svg",
-                        "numeric-7.svg",
-                        "numeric-8.svg",
-                    )
-                )
-            },
+            context={"image": image},
         )
