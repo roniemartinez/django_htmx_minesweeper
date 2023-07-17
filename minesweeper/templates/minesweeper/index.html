@@ -2,20 +2,26 @@
 
 {% load static %}
 
+{% block style %}
+    <style>
+        .grid {
+            border: 0.1px solid black;
+            box-shadow: none;
+            border-radius: 0;
+            width: 30px;
+            height: 30px;
+            vertical-align: bottom;
+            background-color: lightgray;
+        }
+
+        .revealed {
+            background-color: transparent;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
-    {% for i in "0123456789"|make_list %}
-        <div style="display: flex;">
-            {% for j in "0123456789"|make_list %}
-                <button
-                    hx-post="{% url 'minesweeper:clicked' x=i y=j %}"
-                    hx-trigger="click,contextmenu"
-                    hx-target="this"
-                    hx-swap="outerHTML"
-                    class="grid"
-                >
-                    <img src="{% static 'minesweeper/img/blank.svg' %}" alt="Blank">
-                </button>
-            {% endfor %}
-        </div>
-    {% endfor %}
+    <div id="board">
+        {% include "minesweeper/board.html" %}
+    </div>
 {% endblock %}

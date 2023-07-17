@@ -1,0 +1,24 @@
+{% load static %}
+{% load minesweeper %}
+
+
+<div style="margin-bottom: 20px;">
+    <button onclick="location.href='{% url 'minesweeper:restart' %}'">Restart</button>
+</div>
+
+{% for row in board %}
+    <div style="display: flex;">
+        {% for item in row %}
+            <img
+                    {% if not item.is_revealed %}
+                        hx-post="{% url 'minesweeper:clicked' x=forloop.parentloop.counter0 y=forloop.counter0 %}"
+                        hx-trigger="{% if not item.is_flagged %}click,{% endif %}contextmenu"
+                        hx-target="#board"
+                        hx-swap="innerHTML"
+                    {% endif %}
+                        class="grid {% if item.is_revealed %}revealed{% endif %}"
+                        src="{{ item|svg }}" alt="{{ item|alt }}"
+            />
+        {% endfor %}
+    </div>
+{% endfor %}

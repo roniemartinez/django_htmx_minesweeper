@@ -5,14 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <title>minesweeper</title>
-    <style>
-        .grid {
-            width: 30px;
-            height: 30px;
-            margin: 1px;
-            vertical-align: bottom;
-        }
-    </style>
+    {% block style %}
+    {% endblock %}
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
