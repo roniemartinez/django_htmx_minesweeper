@@ -2,15 +2,24 @@
 {% load minesweeper %}
 
 
-<div style="margin-bottom: 20px;">
-    <button onclick="location.href='{% url 'minesweeper:restart' %}'">Restart</button>
+<div style="display: flex; margin-bottom: 20px;">
+    <button onclick="location.href='{% url 'minesweeper:restart' %}'" class="control">
+        <img src="{% static 'minesweeper/img/restart.svg' %}" alt="Restart" height="50">Restart
+    </button>
+    <button class="control">
+        {% if not lost %}
+            <img src="{% static 'minesweeper/img/robot-happy.svg' %}" alt="Happy" height="50">
+        {% else %}
+            <img src="{% static 'minesweeper/img/robot-dead.svg' %}" alt="Lost" height="50">
+        {% endif %}
+    </button>
 </div>
 
 {% for row in board %}
     <div style="display: flex;">
         {% for item in row %}
             <img
-                    {% if not item.is_revealed %}
+                    {% if not lost and not item.is_revealed %}
                         hx-post="{% url 'minesweeper:clicked' x=forloop.parentloop.counter0 y=forloop.counter0 %}"
                         hx-trigger="{% if not item.is_flagged %}click,{% endif %}contextmenu"
                         hx-target="#board"

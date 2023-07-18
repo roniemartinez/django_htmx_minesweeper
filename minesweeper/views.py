@@ -1,6 +1,6 @@
 import random
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Iterator
 
 from django.core.cache import cache
 from django.http import HttpRequest, HttpResponse
@@ -17,6 +17,26 @@ class Item:
     count: int = 0
     is_revealed: bool = False
     is_flagged: bool = False
+
+
+def neighbors(x: int, y: int) -> Iterator[tuple[int, int]]:
+    for neighbor_x, neighbor_y in [
+        (x - 1, y - 1),
+        (x - 1, y),
+        (x - 1, y + 1),
+        (x, y - 1),
+        (x, y + 1),
+        (x + 1, y - 1),
+        (x + 1, y),
+        (x + 1, y + 1),
+    ]:
+        if neighbor_x < 0 or neighbor_y < 0:
+            continue
+        yield neighbor_x, neighbor_y
+
+
+def is_lost(board: list[list[Item]]) -> bool:
+    return any(item.is_mine is True and item.is_revealed is True for row in board for item in row)
 
 
 class HomeView(TemplateView):
@@ -37,18 +57,7 @@ class HomeView(TemplateView):
 
                     count = 0
 
-                    for neighbor_x, neighbor_y in [
-                        (x - 1, y - 1),
-                        (x - 1, y),
-                        (x - 1, y + 1),
-                        (x, y - 1),
-                        (x, y + 1),
-                        (x + 1, y - 1),
-                        (x + 1, y),
-                        (x + 1, y + 1),
-                    ]:
-                        if neighbor_x < 0 or neighbor_y < 0:
-                            continue
+                    for neighbor_x, neighbor_y in neighbors(x, y):
                         try:
                             count += board[neighbor_x][neighbor_y].is_mine is True
                         except IndexError:
@@ -56,7 +65,8 @@ class HomeView(TemplateView):
 
                     board[x][y].count = count
             cache.set("board", board)
-        return super().get(request, *args, board=board, **kwargs)
+
+        return super().get(request, *args, board=board, lost=is_lost(board), **kwargs)
 
 
 class RestartView(RedirectView):
@@ -68,6 +78,7 @@ class RestartView(RedirectView):
 class ClickedView(View):
     def post(self, request: HttpRequest, **kwargs: Any) -> HttpResponse:
         board: list[list[Item]] = cache.get("board")
+        lost = is_lost(board)
 
         trigger = request.headers.get("Hx-Trigger", "click")
 
@@ -79,27 +90,19 @@ class ClickedView(View):
         else:
             board[x][y].is_revealed = True
 
-            if not board[x][y].is_mine and board[x][y].count == 0:
+            lost = board[x][y].is_mine
+
+            if not lost and board[x][y].count == 0:
                 board = self.reveal_neighbors(board, x, y)
 
         cache.set("board", board)
 
-        return render(request=request, template_name="minesweeper/board.html", context={"board": board})
+        return render(request=request, template_name="minesweeper/board.html", context={"board": board, "lost": lost})
 
     def reveal_neighbors(self, board: list[list[Item]], x: int, y: int) -> list[list[Item]]:
         to_reveal: list[tuple[int, int]] = []
-        for neighbor_x, neighbor_y in [
-            (x - 1, y - 1),
-            (x - 1, y),
-            (x - 1, y + 1),
-            (x, y - 1),
-            (x, y + 1),
-            (x + 1, y - 1),
-            (x + 1, y),
-            (x + 1, y + 1),
-        ]:
-            if neighbor_x < 0 or neighbor_y < 0:
-                continue
+
+        for neighbor_x, neighbor_y in neighbors(x, y):
             try:
                 if not board[neighbor_x][neighbor_y].is_revealed:
                     board[neighbor_x][neighbor_y].is_revealed = True
@@ -110,4 +113,5 @@ class ClickedView(View):
 
         for neighbor_x, neighbor_y in to_reveal:
             board = self.reveal_neighbors(board, neighbor_x, neighbor_y)
+
         return board

@@ -8,7 +8,7 @@ Minesweeper implementation using Django and HTMX
 
 ![screencast.gif](screenshots/screencast.gif)
 
-## Mouse Actions
+## Mouse Actions 
 
 - Click: Reveal
 - Right-click: Mark/Unmark (flag)
